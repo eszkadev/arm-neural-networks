@@ -15,6 +15,8 @@ import java.io.IOException;
 public class MainActivity extends AppCompatActivity {
 
     private TensorFlowInferenceInterface inferenceInterface;
+    private float[] inputValues;
+    private float[] outputValues;
 
     private final static String INPUT_NODE = "input_1";
     private final static String OUTPUT_NODE = "conv2d_24/BiasAdd";
@@ -52,10 +54,12 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     TextView tv = (TextView) findViewById(R.id.sample_text);
-                    Bitmap output = Bitmap.createBitmap(256,256, Bitmap.Config.ARGB_8888);
+                    Bitmap output = Bitmap.createBitmap(128,128, Bitmap.Config.ARGB_8888);
+                    feedModel(input);
                     long startTime = System.currentTimeMillis();
-                    runModel(input, output);
+                    runModel();
                     long difference = System.currentTimeMillis() - startTime;
+                    fetchOutput(output);
                     String diff = String.format("%d ms", difference);
                     ((TextView)findViewById(R.id.timeText)).setText(diff);
                     tv.setText("Finished.");
@@ -74,23 +78,28 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
-    void runModel(Bitmap input, Bitmap output) {
-        float[] inputValues = new float[256 * 256];
+    void feedModel(Bitmap input) {
+        inputValues = new float[128 * 128];
         for(int y = 0; y < input.getHeight(); y++) {
             for(int x = 0; x < input.getWidth(); x++) {
                 inputValues[x + y * input.getWidth()] = input.getPixel(x, y) & 0xff;
             }
         }
+        }
 
-        inferenceInterface.feed(INPUT_NODE, inputValues, 1, 256, 256, 1);
+    void runModel() {
+
+        inferenceInterface.feed(INPUT_NODE, inputValues, 1, 128, 128, 1);
         inferenceInterface.run(new String[] {OUTPUT_NODE}, false);
 
-        float[] outputValues = new float[256 * 256];
+        outputValues = new float[128 * 128];
         inferenceInterface.fetch(OUTPUT_NODE, outputValues);
+    }
 
-        for(int y = 0; y < input.getHeight(); y++) {
-            for(int x = 0; x < input.getWidth(); x++) {
-                int pixel = outputValues[x + y * input.getWidth()] < 0 ? 0xff000000 : 0xffffffff;
+    void fetchOutput(Bitmap output) {
+        for(int y = 0; y < 128; y++) {
+            for(int x = 0; x < 128; x++) {
+                int pixel = outputValues[x + y * 128] < 0 ? 0xff000000 : 0xffffffff;
                 output.setPixel(x, y, pixel);
             }
         }
