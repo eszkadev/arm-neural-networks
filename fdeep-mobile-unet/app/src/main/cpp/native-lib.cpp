@@ -45,8 +45,8 @@ Java_com_eszkadev_fdeep_1mobile_1unet_MainActivity_runModel(
         jobject /* aThis */,
         jobject aInputBitmap,
         jobject aOutputBitmap) {
-    int nWidth = 256;
-    int nHeight = 256;
+    int nWidth = 128;
+    int nHeight = 128;
     int nDepth = 1;
     uint8_t* pBitmapPixels = nullptr;
 

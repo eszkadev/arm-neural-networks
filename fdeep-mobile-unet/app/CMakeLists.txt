@@ -23,14 +23,6 @@ add_library( # Sets the name of the library.
              # Provides a relative path to your source file(s).
              src/main/cpp/native-lib.cpp )
 
-#set_property( SOURCE ${native-lib}
-#              APPEND_STRING PROPERTY COMPILE_FLAGS " -mfpu=neon" )
-#add_definitions( "-DHAVE_NEON=1" )
-
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfloat-abi=softfp")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfloat-abi=hard")
-
 # Add include directories with used libraries
 
 include_directories(src/main/cpp/include/)

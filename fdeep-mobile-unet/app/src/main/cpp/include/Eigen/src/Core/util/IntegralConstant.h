@@ -182,10 +182,11 @@ template<int N, int DynamicKey> struct cleanup_index_type<std::integral_constant
 
 #ifndef EIGEN_PARSED_BY_DOXYGEN
 
-#if EIGEN_HAS_CXX14
-template<int N>
-static const internal::FixedInt<N> fix{};
-#else
+// Commented out due to build problems on Android using gcc
+//#if EIGEN_HAS_CXX14
+//template<int N>
+//static const internal::FixedInt<N> fix{};
+//#else
 template<int N>
 inline internal::FixedInt<N> fix() { return internal::FixedInt<N>(); }
 
@@ -193,7 +194,7 @@ inline internal::FixedInt<N> fix() { return internal::FixedInt<N>(); }
 // This way a code like fix<N> can only refer to the previous function.
 template<int N,typename T>
 inline internal::VariableAndFixedInt<N> fix(T val) { return internal::VariableAndFixedInt<N>(internal::convert_index<int>(val)); }
-#endif
+//#endif
 
 #else // EIGEN_PARSED_BY_DOXYGEN
 

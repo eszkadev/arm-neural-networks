@@ -52,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     TextView tv = (TextView) findViewById(R.id.sample_text);
-                    Bitmap output = Bitmap.createBitmap(256,256, Bitmap.Config.ARGB_8888);
+                    Bitmap output = Bitmap.createBitmap(128,128, Bitmap.Config.ARGB_8888);
                     long startTime = System.currentTimeMillis();
                     runModel(input, output);
                     long difference = System.currentTimeMillis() - startTime;
