@@ -53,9 +53,11 @@ public class MainActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     TextView tv = (TextView) findViewById(R.id.sample_text);
                     Bitmap output = Bitmap.createBitmap(128,128, Bitmap.Config.ARGB_8888);
+                    feedModel(input);
                     long startTime = System.currentTimeMillis();
-                    runModel(input, output);
+                    runModel();
                     long difference = System.currentTimeMillis() - startTime;
+                    fetchOutput(output);
                     String diff = String.format("%d ms", difference);
                     ((TextView)findViewById(R.id.timeText)).setText(diff);
                     tv.setText("Finished.");
@@ -71,5 +73,7 @@ public class MainActivity extends AppCompatActivity {
 
     public native boolean loadModel(AssetManager assetManager, boolean runTests);
     public native void unloadModel();
-    public native void runModel(Bitmap input, Bitmap output);
+    public native void feedModel(Bitmap input);
+    public native void runModel();
+    public native void fetchOutput(Bitmap output);
 }
