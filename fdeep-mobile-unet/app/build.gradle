@@ -17,7 +17,8 @@ android {
                         "-DANDROID_ABI=arm64-v8a",
                         "-DCMAKE_VERBOSE_MAKEFILE=1",
                         "-DANDROID_ARM_NEON=TRUE",
-                        "-DANDROID_TOOLCHAIN=gcc"
+                        "-DANDROID_TOOLCHAIN=gcc",
+                        "-DANDROID_ARM_MODE=thumb"
             }
         }
     }
