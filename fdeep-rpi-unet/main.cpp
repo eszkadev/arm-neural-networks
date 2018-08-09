@@ -3,7 +3,7 @@
 #include "EasyBMP.h"
 #include <math.h>
 
-int main()
+int main(int argc, char** argv)
 {
     fplus::stopwatch stopwatch;
     const auto model = fdeep::load_model("unet.json", false);
@@ -15,7 +15,7 @@ int main()
     fdeep::tensor3 result(fdeep::shape3(1,1,1), {1});
 
     BMP bmp;
-    bmp.ReadFromFile("input.bmp");
+    bmp.ReadFromFile(argv[1]);
 
     const int patch_size = 128;
     int size = patch_size * patch_size;
@@ -67,18 +67,18 @@ int main()
             {
 
                 float val = fdata[x + y * width];
-                val = val < 0.5 ? 0 : 255;
+                val *= 255.0;
 
                 RGBApixel pixel;
                 pixel.Red = val;
                 pixel.Green = val;
                 pixel.Blue = val;
                 pixel.Alpha = 255;
-                bmp.SetPixel(x, y, pixel);
+                bmp.SetPixel(y, x, pixel);
             }
         }
 
-        bmp.WriteToFile("output.bmp");
+        bmp.WriteToFile(argv[2]);
     }
     catch(std::runtime_error e)
     {

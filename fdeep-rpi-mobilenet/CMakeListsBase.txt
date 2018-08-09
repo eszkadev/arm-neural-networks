@@ -1,0 +1,13 @@
+cmake_minimum_required(VERSION 3.0) # minimum requirement for Hunter
+
+project(sample-frugally-deep)
+
+find_package(frugally-deep CONFIG REQUIRED)
+
+SET(GCC_ARM_NEON    "-mcpu=cortex-a53 -O3 -fno-tree-vectorize -fopt-info-vec-optimized")
+add_definitions(${GCC_ARM_NEON})
+SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_ARM_NEON}")
+add_compile_options(-D NDEBUG)
+
+add_executable(foo_base main.cpp EasyBMP.cpp)
+target_link_libraries(foo_base PUBLIC frugally-deep::fdeep) # add frugally-deep and dependencies (libs/includes/flags/definitions)
