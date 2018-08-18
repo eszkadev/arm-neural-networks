@@ -1,0 +1,7 @@
+*.h5 filter=lfs diff=lfs merge=lfs -text
+*.hdf5 filter=lfs diff=lfs merge=lfs -text
+*.pb filter=lfs diff=lfs merge=lfs -text
+*.json filter=lfs diff=lfs merge=lfs -text
+fdeep-mobile-unet/app/src/main/assets/unet.json filter=lfs diff=lfs merge=lfs -text
+tensorflow-mobile-unet/app/src/main/assets/unet.pb filter=lfs diff=lfs merge=lfs -text
+tf-rpi-unet/unet_128.hdf5 filter=lfs diff=lfs merge=lfs -text
