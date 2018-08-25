@@ -1,19 +1,14 @@
 #!/bin/bash
 
-LOG=testingmobilennet.log
+LOG=out_openmp.log
 
-for app in foo_neon_openmp foo_neon foo_base
+for app in foo_neon_openmp
 do
-	for i in {1..10}
+	for i in {0..50}
 	do
-		echo $app >> $LOG
-		for test in airplane.bmp automobile.bmp bird.bmp ship.bmp dog.bmp cat.bmp car.bmp
-		do
-			echo $test >> $LOG
-			./$app $test >> $LOG
-			echo "" >> $LOG
-			sleep 5
-		done
+		echo $i >> $LOG
+		./$app bmp/$i.bmp >> $LOG
+		echo "" >> $LOG
 	done
 	echo "" >> $LOG
 done

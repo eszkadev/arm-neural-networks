@@ -18,20 +18,21 @@ int main(int argc, char** argv)
     BMP bmp;
     bmp.ReadFromFile(argv[1]);
 
-    std::vector<float> data;
-    data.resize(HEIGHT * WIDTH * CHANNELS);
-    for(int y = 0; y < HEIGHT; y++)
+    std::vector<unsigned char> pixels;
+    pixels.reserve(HEIGHT * WIDTH * CHANNELS);
+
+    for (int y = 0; y < HEIGHT; y++)
     {
-        for(int x = 0; x < WIDTH; x++)
+        for (int x = 0; x < WIDTH; x++)
         {
-            data[x + y*WIDTH] = bmp.GetPixel(x, y).Red / 255.0;
-            data[x + y*WIDTH + 1] = bmp.GetPixel(x, y).Green / 255.0;
-            data[x + y*WIDTH + 2] = bmp.GetPixel(x, y).Blue / 255.0;
+		pixels.push_back((float)bmp.GetPixel(x, y).Red);
+		pixels.push_back((float)bmp.GetPixel(x, y).Green);
+		pixels.push_back((float)bmp.GetPixel(x, y).Blue);
         }
     }
 
-    fdeep::shape3 shape(CHANNELS, WIDTH, HEIGHT);
-    auto input = fdeep::tensor3(shape, fplus::make_shared_ref<std::vector<float>>(data));
+    auto input = fdeep::tensor3_from_bytes(pixels.data(), HEIGHT, WIDTH, CHANNELS,
+-1.0, 1.0);
 
     try
     {
@@ -39,20 +40,29 @@ int main(int argc, char** argv)
         const auto results = model.predict({input});
         std::cout << "Predict: " << fplus::show_float(0, 6, stopwatch.elapsed()) << std::endl;
 
+
         std::vector<uint8_t> output = fdeep::tensor3_to_bytes(results[0]);
-        std::cout << "[ ";
-        for(int i = 0; i < output.size(); i++)
+
+        int maxpos = 0;
+        float max = -1;
+	int i = 0;
+        for(auto value : *(results[0].as_vector()))
         {
-            auto& value = output[i];
-            std::cout << (int)value << ", ";
+            if(value > max)
+            {
+                maxpos = i;
+                max = value;
+            }
+	    i++;
         }
-        std::cout << "] ";
+
+        std::cout << "Result: " << maxpos << std::endl;
     }
     catch(std::runtime_error e)
     {
         std::cout << "EXCEPTION: " << e.what() << std::endl;
     }
 
-    std::cout << "END" << std::endl;
+    //std::cout << "END" << std::endl;
     return 0;
 }
