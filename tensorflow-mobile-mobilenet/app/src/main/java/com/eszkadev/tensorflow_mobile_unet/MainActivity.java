@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     boolean loadModel() {
-        inferenceInterface = new TensorFlowInferenceInterface(getAssets(), "mobilenet.pb");
+        inferenceInterface = new TensorFlowInferenceInterface(getAssets(), "mobilenet_op4.pb");
         return true;
     }
 

@@ -1,8 +1,12 @@
 package com.eszkadev.tensorflow_mobile_unet;
 
 import org.tensorflow.contrib.android.TensorFlowInferenceInterface;
+
+import android.content.Context;
+import android.content.ContextWrapper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -10,6 +14,8 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity {
@@ -21,6 +27,26 @@ public class MainActivity extends AppCompatActivity {
     private final static String INPUT_NODE = "input_1";
     private final static String OUTPUT_NODE = "conv2d_24/BiasAdd";
 
+    private void saveToInternalStorage(Bitmap bitmapImage, String name){
+        File file = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_DOWNLOADS), name);
+
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream(file);
+            bitmapImage.compress(Bitmap.CompressFormat.PNG, 100, fos);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if(fos != null)
+                    fos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -28,7 +54,9 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.runButton).setEnabled(false);
 
         try {
-            final Bitmap input = BitmapFactory.decodeStream(getAssets().open("input.bmp"));
+            Integer i = 0;
+            String fileName = "test/" + i.toString() + ".png";
+            final Bitmap input = BitmapFactory.decodeStream(getAssets().open(fileName));
             ((ImageView)findViewById(R.id.inputView)).setImageBitmap(input);
 
             Button buttonLoad = (Button)findViewById(R.id.loadButton);
@@ -54,16 +82,26 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     TextView tv = (TextView) findViewById(R.id.sample_text);
-                    Bitmap output = Bitmap.createBitmap(128,128, Bitmap.Config.ARGB_8888);
-                    feedModel(input);
-                    long startTime = System.currentTimeMillis();
-                    runModel();
-                    long difference = System.currentTimeMillis() - startTime;
-                    fetchOutput(output);
-                    String diff = String.format("%d ms", difference);
-                    ((TextView)findViewById(R.id.timeText)).setText(diff);
-                    tv.setText("Finished.");
-                    ((ImageView)findViewById(R.id.outputView)).setImageBitmap(output);
+                    for(Integer i = 0; i < 30; i++) {
+                        String fileName = "test/" + i.toString() + ".png";
+                        try
+                        {
+                            final Bitmap input = BitmapFactory.decodeStream(getAssets().open(fileName));
+                            Bitmap output = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888);
+                            feedModel(input);
+                            long startTime = System.currentTimeMillis();
+                            runModel();
+                            long difference = System.currentTimeMillis() - startTime;
+                            fetchOutput(output);
+                            String diff = String.format("%d ms", difference);
+                            ((TextView) findViewById(R.id.timeText)).setText(diff);
+                            tv.setText("Finished.");
+                            saveToInternalStorage(output, i.toString() + ".png");
+                            ((ImageView) findViewById(R.id.outputView)).setImageBitmap(output);
+                        } catch(IOException exception) {
+                            exception.printStackTrace();
+                        }
+                    }
                 }
             });
 
