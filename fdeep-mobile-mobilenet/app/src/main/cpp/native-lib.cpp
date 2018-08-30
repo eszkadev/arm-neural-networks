@@ -6,8 +6,8 @@
 #include <string>
 
 static fdeep::model* pModel = nullptr;
-static std::uint8_t* pInputData = nullptr;
-static std::vector<uint8_t> aOutput;
+static std::vector<unsigned char> aInputData;
+static std::vector<float> aOutput;
 
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_eszkadev_fdeep_1mobile_1mobilenet_MainActivity_loadModel(
@@ -54,12 +54,19 @@ Java_com_eszkadev_fdeep_1mobile_1mobilenet_MainActivity_feedModel(
     // Get input
     AndroidBitmap_lockPixels(pEnv, aInputBitmap, (void**)&pBitmapPixels);
 
-    pInputData = new std::uint8_t[nWidth * nHeight * nDepth];
-    for(int y = 0; y < nHeight; y++) {
-        for (int x = 0; x < nWidth*4; x+=4) {
-            pInputData[x + y * nWidth] = pBitmapPixels[(x + y * nWidth)];
-            pInputData[x + 1 + y * nWidth] = pBitmapPixels[(x + 1 + y * nWidth)];
-            pInputData[x + 2 + y * nWidth] = pBitmapPixels[(x + 2 + y * nWidth)];
+    aInputData.clear();
+    aInputData.reserve(nWidth * nHeight * nDepth);
+
+    for (int y = 0; y < nHeight; y++)
+    {
+        for (int x = 0; x < nWidth; x++)
+        {
+            float r = pBitmapPixels[(x + y * nWidth) * 4];
+            float g = pBitmapPixels[(x + y * nWidth) * 4 + 1];
+            float b = pBitmapPixels[(x + y * nWidth) * 4 + 2];
+            aInputData.push_back(r);
+            aInputData.push_back(g);
+            aInputData.push_back(b);
         }
     }
 
@@ -68,22 +75,35 @@ Java_com_eszkadev_fdeep_1mobile_1mobilenet_MainActivity_feedModel(
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_eszkadev_fdeep_1mobile_1mobilenet_MainActivity_runModel(
-        JNIEnv *pEnv,
+        JNIEnv /**pEnv*/,
         jobject /* aThis */) {
     int nWidth = 224;
     int nHeight = 224;
     int nDepth = 3;
 
-    fdeep::tensor3 aInputData = fdeep::tensor3_from_bytes(pInputData, nWidth, nHeight, nDepth);
+    auto aInput = fdeep::tensor3_from_bytes(aInputData.data(), nWidth, nHeight, nDepth, -1.0, 1.0);
 
     // Evaluate
-    const auto result = pModel->predict({aInputData});
-    //aOutput = fdeep::tensor3_to_bytes(result[0]);
+    const auto result = pModel->predict({aInput});
+    aOutput = *(result[0].as_vector());
 }
 
-extern "C" JNIEXPORT void JNICALL
+extern "C" JNIEXPORT jint JNICALL
 Java_com_eszkadev_fdeep_1mobile_1mobilenet_MainActivity_fetchOutput(
-        JNIEnv *pEnv,
-        jobject /* aThis */,
-        jobject aOutputBitmap) {
+        JNIEnv /**pEnv*/,
+        jobject /* aThis */) {
+    int maxpos = 0;
+    float max = -1;
+    int i = 0;
+
+    for(auto value : aOutput)
+    {
+        if(value > max)
+        {
+            maxpos = i;
+            max = value;
+        }
+        i++;
+    }
+    return maxpos;
 }
