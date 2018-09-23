@@ -3,6 +3,7 @@ package com.eszkadev.tensorflow_mobile_unet;
 import org.tensorflow.contrib.android.TensorFlowInferenceInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -10,7 +11,14 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+
+import static android.graphics.Color.blue;
+import static android.graphics.Color.green;
+import static android.graphics.Color.red;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -21,6 +29,30 @@ public class MainActivity extends AppCompatActivity {
     private final static String INPUT_NODE = "input_1";
     private final static String OUTPUT_NODE = "reshape_2/Reshape";
 
+    private void saveToInternalStorage(String result){
+        File file = new File(Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES), "log.txt");
+
+        FileOutputStream fos = null;
+        OutputStreamWriter sw = null;
+        try {
+            fos = new FileOutputStream(file);
+            sw = new OutputStreamWriter(fos);
+            sw.write(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if(sw != null)
+                    sw.close();
+                if(fos != null)
+                    fos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -28,7 +60,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.runButton).setEnabled(false);
 
         try {
-            final Bitmap input = BitmapFactory.decodeStream(getAssets().open("input.bmp"));
+            final Bitmap input = BitmapFactory.decodeStream(getAssets().open("bmp/0.bmp"));
             ((ImageView)findViewById(R.id.inputView)).setImageBitmap(input);
 
             Button buttonLoad = (Button)findViewById(R.id.loadButton);
@@ -53,17 +85,26 @@ public class MainActivity extends AppCompatActivity {
             buttonRun.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    TextView tv = (TextView) findViewById(R.id.sample_text);
-                    Bitmap output = Bitmap.createBitmap(224,224, Bitmap.Config.ARGB_8888);
-                    feedModel(input);
-                    long startTime = System.currentTimeMillis();
-                    runModel();
-                    long difference = System.currentTimeMillis() - startTime;
-                    fetchOutput(output);
-                    String diff = String.format("%d ms", difference);
-                    ((TextView)findViewById(R.id.timeText)).setText(diff);
-                    tv.setText("Finished.");
-                    ((ImageView)findViewById(R.id.outputView)).setImageBitmap(output);
+                    String results = "";
+                    long difference = 0;
+                    for (int i = 0; i < 1; i++) {
+                        try {
+                            final Bitmap input = BitmapFactory.decodeStream(getAssets().open(String.format("bmp/%d.bmp", i)));
+                            ((ImageView) findViewById(R.id.inputView)).setImageBitmap(input);
+                            TextView tv = (TextView) findViewById(R.id.sample_text);
+                            feedModel(input);
+                            long startTime = System.currentTimeMillis();
+                            runModel();
+                            difference += System.currentTimeMillis() - startTime;
+                            results = fetchOutput(results);
+                            String diff = String.format("%f s", difference/1000.0);
+                            ((TextView) findViewById(R.id.timeText)).setText(diff);
+                            tv.setText(results);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    saveToInternalStorage(results);
                 }
             });
 
@@ -74,20 +115,24 @@ public class MainActivity extends AppCompatActivity {
     }
 
     boolean loadModel() {
-        inferenceInterface = new TensorFlowInferenceInterface(getAssets(), "mobilenet_op4.pb");
+        inferenceInterface = new TensorFlowInferenceInterface(getAssets(), "mobilenet.pb");
         return true;
     }
 
     void feedModel(Bitmap input) {
         inputValues = new float[224 * 224 * 3];
-        for(int y = 0; y < input.getHeight(); y++) {
-            for(int x = 0; x < input.getWidth(); x++) {
-                inputValues[x + y * input.getWidth()] = input.getPixel(x, y) & 0xff;
-                inputValues[x + 1 + y * input.getWidth()] = input.getPixel(x, y) & 0xff00;
-                inputValues[x + 2 + y * input.getWidth()] = input.getPixel(x, y) & 0xff0000;
+        for(int y = 0; y < 224; y++) {
+            for(int x = 0; x < 224; x++) {
+                int pixel = input.getPixel(x, y);
+                float r = (float)red(pixel);
+                float g = (float)green(pixel);
+                float b = (float)blue(pixel);
+                inputValues[x * 3 + 0 + y * 224 * 3] = r / 127.5F - 1.0F;
+                inputValues[x * 3 + 1 + y * 224 * 3] = g / 127.5F - 1.0F;
+                inputValues[x * 3 + 2 + y * 224 * 3] = b / 127.5F - 1.0F;
             }
         }
-        }
+    }
 
     void runModel() {
 
@@ -98,6 +143,18 @@ public class MainActivity extends AppCompatActivity {
         inferenceInterface.fetch(OUTPUT_NODE, outputValues);
     }
 
-    void fetchOutput(Bitmap output) {
+    String fetchOutput(String results) {
+        int maxpos = 0;
+        float value = 0;
+        for(int i = 0; i < 1000; i++)
+        {
+            if(outputValues[i] > value)
+            {
+                value = outputValues[i];
+                maxpos = i;
+            }
+        }
+        results += String.valueOf(maxpos) + "\n";
+        return results;
     }
 }

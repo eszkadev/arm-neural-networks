@@ -7,7 +7,7 @@
 
 static fdeep::model* pModel = nullptr;
 static std::vector<unsigned char> aInputData;
-static std::vector<float> aOutput;
+static std::vector<fdeep::internal::float_type> aOutput;
 
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_eszkadev_fdeep_1mobile_1mobilenet_MainActivity_loadModel(
@@ -61,9 +61,9 @@ Java_com_eszkadev_fdeep_1mobile_1mobilenet_MainActivity_feedModel(
     {
         for (int x = 0; x < nWidth; x++)
         {
-            float r = pBitmapPixels[(x + y * nWidth) * 4];
-            float g = pBitmapPixels[(x + y * nWidth) * 4 + 1];
-            float b = pBitmapPixels[(x + y * nWidth) * 4 + 2];
+            fdeep::internal::float_type r = pBitmapPixels[(x + y * nWidth) * 4];
+            fdeep::internal::float_type g = pBitmapPixels[(x + y * nWidth) * 4 + 1];
+            fdeep::internal::float_type b = pBitmapPixels[(x + y * nWidth) * 4 + 2];
             aInputData.push_back(r);
             aInputData.push_back(g);
             aInputData.push_back(b);
@@ -93,7 +93,7 @@ Java_com_eszkadev_fdeep_1mobile_1mobilenet_MainActivity_fetchOutput(
         JNIEnv /**pEnv*/,
         jobject /* aThis */) {
     int maxpos = 0;
-    float max = -1;
+    fdeep::internal::float_type max = -1;
     int i = 0;
 
     for(auto value : aOutput)
